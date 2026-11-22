@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GB Gestão de Pedidos</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#17202b;font:14px Arial,sans-serif}.app{display:flex;min-height:100vh}.side{width:235px;background:#0b1b2a;color:#fff;padding:20px 14px;position:fixed;height:100vh}.logo{font-size:38px;font-weight:900;padding:4px 10px}.logo b{color:#55aaff}.sub{font-size:10px;color:#9fb0c4;padding:0 12px 24px}.nav button{display:block;width:100%;border:0;background:none;color:#d8e1eb;text-align:left;padding:12px;border-radius:8px;margin:3px 0;cursor:pointer;font-size:14px}.nav button.active,.nav button:hover{background:#1266e3;color:#fff}.main{margin-left:235px;padding:25px;width:calc(100% - 235px)}h1{margin:0 0 5px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px}.muted{color:#667085}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.card,.panel{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:17px}.num{font-size:30px;font-weight:800;margin-top:8px}.panel{margin-top:18px}.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}.toolbar input,.toolbar select{padding:10px;border:1px solid #d0d5dd;border-radius:7px}.toolbar input{flex:1;min-width:220px}.btn{padding:10px 14px;border:0;border-radius:7px;cursor:pointer;font-weight:700}.btn:disabled{opacity:.55;cursor:not-allowed}.blue{background:#1266e3;color:white}.light{background:#edf4ff;color:#1459b8}.green{background:#dcfce7;color:#15803d}.red{background:#fee2e2;color:#b91c1c}.yellow{background:#fff7cc;color:#92400e}.dark{background:#17202b;color:#fff}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px;border-bottom:1px solid #edf0f3;text-align:left;vertical-align:middle}.table th{font-size:12px;color:#667085}.badge{padding:5px 9px;border-radius:99px;font-size:11px;font-weight:700;display:inline-block}.waiting{background:#fff0df;color:#b45309}.ready{background:#dcfce7;color:#15803d}.no{background:#fee2e2;color:#b91c1c}.cancel{background:#eee;color:#555}.progress{background:#eaf2ff;color:#1459b8}.notice{padding:12px;border-radius:8px;margin:10px 0}.hidden{display:none}.checkline{display:flex;align-items:center;gap:8px;font-weight:700}.summary{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 14px}.summary .pill{background:#f3f4f6;border-radius:20px;padding:8px 11px}.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.box{background:#fff;border-radius:12px;max-width:1000px;width:100%;max-height:90vh;overflow:auto;padding:20px}.item{padding:14px;border:1px solid #e5e7eb;border-radius:8px;margin:10px 0}.itemline{display:flex;justify-content:space-between;gap:15px}.ok{color:#15803d;font-weight:800}.bad{color:#b91c1c;font-weight:800}.empty{padding:35px;text-align:center;color:#667085}.small{font-size:12px}.switch{display:flex;align-items:center;gap:8px}.last{font-size:12px;color:#667085;margin-top:5px}@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.side{width:65px}.sub,.nav span{display:none}.main{margin-left:65px;width:calc(100% - 65px)}.cards{grid-template-columns:repeat(2,1fr)}.table{font-size:12px}.table th,.table td{padding:8px}}
+</style></head><body>
+<div class="app"><aside class="side"><div class="logo">G<b>B</b></div><div class="sub">GESTÃO DE PEDIDOS</div>
+<div class="nav"><button class="active" onclick="page('dashboard',this)">⌂ <span>Dashboard</span></button><button onclick="page('orders',this)">▣ <span>Pedidos de vendas</span></button><button onclick="page('progress',this)">◷ <span>Andamento</span></button><button onclick="page('invoices',this)">▤ <span>Emitir / Notas Fiscais</span></button><button onclick="page('settings',this)">⚙ <span>Configurações</span></button></div></aside>
+<main class="main">
+<section id="dashboard"><div class="top"><div><h1>Dashboard</h1><div class="muted">Pedidos da Shopee • estoque • NF-e</div></div><button class="btn light" onclick="loadOrders(false)">↻ Atualizar pedidos</button></div><div class="cards">
+<div class="card">Pedidos de vendas<div class="num" id="cTotal">0</div></div><div class="card">Disponíveis<div class="num" id="cReady">0</div></div><div class="card">Sem estoque<div class="num" id="cNo">0</div></div><div class="card">Selecionados<div class="num" id="cSelected">0</div></div><div class="card">Bling<div class="num" id="cBling">—</div></div></div>
+<div class="panel"><h3>Andamento</h3><div id="dashProgress" class="muted">Nenhuma operação em andamento.</div><div id="msg"></div></div></section>
+
+<section id="orders" class="hidden"><div class="top"><div><h1>Pedidos de Vendas</h1><div class="muted">Escolha manualmente a loja e a situação, como no Bling.</div></div></div>
+<div class="panel"><div class="toolbar">
+<label style="display:flex;align-items:center;gap:7px;font-weight:700">Loja <select id="storeFilter" onchange="changeFilter()"><option value="todas">Todas as lojas</option></select></label>
+<label style="display:flex;align-items:center;gap:7px;font-weight:700">Situação <select id="statusFilter" onchange="changeFilter()"><option value="andamento">Andamento</option></select></label><label style="display:flex;align-items:center;gap:7px;font-weight:700">Entrega <select id="deliveryFilter" onchange="changeFilter()"><option value="todas">Todos os envios</option><option value="direta">Somente Entrega Direta</option><option value="express">Somente Shopee Express</option><option value="normal">Somente envio normal</option></select></label>
+<label style="display:flex;align-items:center;gap:7px;font-weight:700">Data inicial <input id="dateStart" type="date" onchange="changeFilter()"></label><label style="display:flex;align-items:center;gap:7px;font-weight:700">Data final <input id="dateEnd" type="date" onchange="changeFilter()"></label><label style="display:flex;align-items:center;gap:7px;font-weight:700">Pedidos por carga <select id="batchSize" onchange="saveBatchSize()"><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40" selected>40</option><option value="50">50</option><option value="75">75</option><option value="100">100</option></select></label>
+<input id="search" placeholder="Buscar pedido, cliente ou SKU" oninput="render()"><button id="loadMoreBtn" class="btn blue" onclick="loadOrders(true)">↻ Carregar pedidos</button><button class="btn light" onclick="loadOrders(false,true)">🔄 Atualizar página</button><button class="btn light" onclick="checkAllStock()">🔎 Conferir estoque de todos</button></div>
+<div class="summary"><span class="pill" id="selCount">0 selecionado(s)</span><span class="pill">Disponíveis: <b id="sumReady">0</b></span><span class="pill">Sem estoque: <b id="sumNo">0</b></span><span class="pill">Aguardando conferência: <b id="sumUnknown">0</b></span></div>
+<div class="toolbar" style="align-items:center"><button class="btn green" onclick="selectAvailable()">☑ Selecionar disponíveis</button><button class="btn red" onclick="clearSelection()">☐ Desmarcar todos</button><button class="btn light" onclick="checkSelectedStock()">🔎 Conferir selecionados</button><button class="btn blue" onclick="goToProgress()">➡ Ir para Andamento</button><button class="btn dark" onclick="bulkGenerate()">🧾 Emitir notas fiscais</button><button class="btn dark" onclick="removeSelectedFromQueue()">🗑 Tirar selecionados da fila</button><span id="bulkMsg" class="muted"></span></div>
+<table class="table"><thead><tr><th><input id="selectAll" type="checkbox" onchange="toggleAll(this.checked)"></th><th>Pedido</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Entrega</th><th>Andamento</th><th>Estoque</th><th>Ação</th></tr></thead><tbody id="body"></tbody></table></div></section>
+
+<section id="progress" class="hidden"><div class="top"><div><h1>Andamento</h1><div class="muted">Aqui ficam somente os pedidos marcados em Pedidos de Vendas. Depois da conferência, gere a NF-e nesta etapa.</div></div><div class="toolbar" style="margin:0"><button class="btn light" onclick="renderProgress()">↻ Atualizar andamento</button><button class="btn blue" onclick="bulkGenerate()">🧾 Gerar nota fiscal dos marcados</button></div></div><div class="panel"><div id="progressSummary"></div><div id="progressMsg"></div><table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Etapa</th><th>Estoque</th><th>Situação</th></tr></thead><tbody id="progressBody"></tbody></table></div></section>
+
+<section id="invoices" class="hidden"><div class="top"><div><h1>Emitir / Notas Fiscais</h1><div class="muted">Emissão somente para pedidos selecionados e com estoque disponível.</div></div><button class="btn blue" onclick="loadInvoices()">↻ Atualizar notas</button></div><div class="panel"><div class="notice" style="background:#eef6ff;color:#1459b8">Fluxo: <b>Pedidos de vendas</b> → marque os pedidos → <b>Andamento</b> → <b>Gerar nota fiscal</b>.</div><table class="table"><thead><tr><th>ID</th><th>Número</th><th>Série</th><th>Cliente</th><th>Situação</th></tr></thead><tbody id="nfeBody"></tbody></table></div></section>
+
+<section id="settings" class="hidden"><div class="top"><div><h1>Configurações</h1><div class="muted">Conexão com o Bling</div></div></div><div class="panel"><p>Status: <b id="status">consultando...</b></p><div class="notice" style="background:#fff7cc;color:#92400e">Configure o Bling uma única vez aqui. A configuração fica salva neste computador e será reutilizada nas próximas vezes.</div><div class="toolbar" style="display:block;max-width:700px"><label><b>BLING CLIENT ID</b></label><input id="blingClientId" style="width:100%;margin:6px 0 12px" placeholder="Client ID do Bling"><label><b>BLING CLIENT SECRET</b></label><input id="blingClientSecret" type="password" style="width:100%;margin:6px 0 12px" placeholder="Client Secret do Bling"><label><b>REDIRECT URI</b></label><input id="blingRedirectUri" style="width:100%;margin:6px 0 12px" value="http://localhost:3000/oauth/bling/callback"><button class="btn green" onclick="saveBlingConfig()">💾 Salvar configuração</button> <a class="btn blue" href="/oauth/bling">Conectar / reconectar Bling</a><span id="configMsg" class="muted"></span></div><hr><h3>Conexão direta com a Shopee</h3><p class="muted">Use as credenciais Live do aplicativo JB AUTO PECASS. A Partner Key é salva no servidor e nunca é exibida novamente.</p><div class="toolbar" style="display:block;max-width:700px"><label><b>SHOPEE PARTNER ID</b></label><input id="shopeePartnerId" style="width:100%;margin:6px 0 12px" value="2042612"><label><b>SHOPEE PARTNER KEY (LIVE)</b></label><input id="shopeePartnerKey" type="password" style="width:100%;margin:6px 0 12px" placeholder="Cole a Partner Key Live aqui"><label><b>REDIRECT URI SHOPEE</b></label><input id="shopeeRedirectUri" style="width:100%;margin:6px 0 12px" value=""><button class="btn green" onclick="saveShopeeConfig()">Salvar configuração Shopee</button> <a class="btn blue" href="/shopee/authorize">Conectar loja Shopee</a> <span id="shopeeConfigMsg" class="muted"></span><div class="last" id="shopeeStatus"></div></div><hr><p>O sistema consulta o estoque no Bling antes da emissão. Não faz baixa manual de estoque.</p><div class="last" id="lastUpdate"></div></div></section>
+</main></div>
+<div id="modal" class="modal"><div class="box"><div class="top"><h2 id="mtitle">Pedido</h2><button class="btn red" onclick="closeModal()">Fechar</button></div><div id="mcontent"></div></div></div>
+<script>
+let orders=[];let selected=new Set();let lastOperation="";let nextPage=1;let loading=false;let batchSize=40;let loadedIds=new Set();let salesFilters={lojas:[],situacoes:[]};
+const money=v=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v||0));
+function page(id,b){document.querySelectorAll("main section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b?.classList.add("active");if(id==="invoices")loadInvoices();if(id==="progress")renderProgress()}
+async function api(u,opt){const r=await fetch(u,opt);let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||"Erro");return j}
+async function loadBlingConfig(){try{const j=await api("/api/config/bling");document.getElementById("blingRedirectUri").value=j.redirectUri||"http://localhost:3000/oauth/bling/callback";if(j.configured){document.getElementById("blingClientId").placeholder="Configurado: "+j.clientIdMasked;}}catch{}}
+async function saveBlingConfig(){const m=document.getElementById("configMsg");m.textContent="Salvando...";try{const j=await api("/api/config/bling",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({clientId:document.getElementById("blingClientId").value,clientSecret:document.getElementById("blingClientSecret").value,redirectUri:document.getElementById("blingRedirectUri").value})});m.textContent=" Configuração salva. Agora clique em Conectar / reconectar Bling.";await status();}catch(e){m.textContent=" Erro: "+e.message}}
+
+async function loadShopeeConfig(){try{const j=await api("/api/config/shopee");document.getElementById("shopeePartnerId").value=j.partnerId||"2042612";document.getElementById("shopeeRedirectUri").value=j.redirectUri||`${location.origin}/shopee/callback`;document.getElementById("shopeePartnerKey").placeholder=j.partnerKeyConfigured?"Partner Key já configurada (não exibida)":"Cole a Partner Key Live aqui";document.getElementById("shopeeStatus").textContent=j.connected?`Shopee conectada • Loja ${j.shopId}`:"Shopee ainda não autorizada";}catch{}}
+async function saveShopeeConfig(){const m=document.getElementById("shopeeConfigMsg");m.textContent="Salvando...";try{const j=await api("/api/config/shopee",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({partnerId:document.getElementById("shopeePartnerId").value,partnerKey:document.getElementById("shopeePartnerKey").value,redirectUri:document.getElementById("shopeeRedirectUri").value})});document.getElementById("shopeePartnerKey").value="";m.textContent="Configuração salva no servidor.";await loadShopeeConfig();}catch(e){m.textContent="Erro: "+e.message}}
+
+async function status(){try{const j=await api("/api/status");document.getElementById("status").textContent=j.blingConnected?"CONECTADO":"NÃO CONECTADO";document.getElementById("cBling").textContent=j.blingConnected?"OK":"—"}catch{}}
+function updateCounters(){const ready=orders.filter(o=>o.available&&!o.hasUnknown&&!o.cancelled).length;const no=orders.filter(o=>o.items.some(i=>i.stock>=0&&i.stock<i.qty)).length;const unknown=orders.filter(o=>o.hasUnknown&&!o.cancelled).length;document.getElementById("cTotal").textContent=orders.length;document.getElementById("cReady").textContent=ready;document.getElementById("cNo").textContent=no;document.getElementById("cSelected").textContent=selected.size;document.getElementById("sumReady").textContent=ready;document.getElementById("sumNo").textContent=no;document.getElementById("sumUnknown").textContent=unknown}
+function saveBatchSize(){const el=document.getElementById("batchSize");batchSize=Math.min(Math.max(Number(el?.value||40),10),100);localStorage.setItem("gb_batch_size",String(batchSize));updateLoadButton()}
+function initBatchSize(){const n=Math.min(Math.max(Number(localStorage.getItem("gb_batch_size")||40),10),100);batchSize=n;const el=document.getElementById("batchSize");if(el)el.value=String(n);updateLoadButton()}
+function updateLoadButton(){const b=document.getElementById("loadMoreBtn");if(b)b.textContent=loading?`⏳ Buscando ${batchSize}...`:`↻ Carregar próximos ${batchSize}`;}
+function cacheBust(){return `&_v=3.10.0&t=${Date.now()}`}
+async function loadSalesFilters(){
+  try{
+    const j=await api("/api/sales-filters");
+    salesFilters=j;
+    const loja=document.getElementById("storeFilter");
+    const sit=document.getElementById("statusFilter");
+    if(loja){
+      const current=localStorage.getItem("gb_store_filter")||"";
+      loja.innerHTML='<option value="todas">Todas as lojas</option>'+(j.lojas||[]).map(x=>`<option value="${String(x.id)}">${String(x.nome).replaceAll('"','&quot;')}</option>`).join("");
+      const preferred=(j.lojas||[]).find(x=>/jb auto peças - shopee|jb auto pecas - shopee/i.test(x.nome||""));
+      loja.value=current && (["todas",...(j.lojas||[]).map(x=>String(x.id))].includes(current))?current:(preferred?String(preferred.id):"todas");
+    }
+    if(sit){
+      const current=localStorage.getItem("gb_status_filter")||"andamento";
+      sit.innerHTML=(j.situacoes||[]).map(x=>`<option value="${x.value}">${x.label}</option>`).join("");
+      sit.value=(j.situacoes||[]).some(x=>x.value===current)?current:"andamento";
+    }
+  }catch(e){
+    console.warn("Não foi possível carregar filtros do Bling",e);
+  }
+}
+function changeFilter(){
+  const a=document.getElementById("dateStart")?.value||"";
+  const b=document.getElementById("dateEnd")?.value||"";
+  if(a&&b&&a>b){alert("A data inicial não pode ser maior que a data final.");return;}
+  localStorage.setItem("gb_store_filter",document.getElementById("storeFilter")?.value||"todas");
+  localStorage.setItem("gb_status_filter",document.getElementById("statusFilter")?.value||"andamento");
+  localStorage.setItem("gb_date_start",a);
+  localStorage.setItem("gb_date_end",b);
+  localStorage.setItem("gb_delivery_filter",document.getElementById("deliveryFilter")?.value||"todas");
+  nextPage=1;loadedIds=new Set();orders=[];selected.clear();render();
+  loadOrders(false,true);
+}
+function initDateFilters(){
+  const delivery=document.getElementById("deliveryFilter");if(delivery)delivery.value=localStorage.getItem("gb_delivery_filter")||"todas";
+  const a=document.getElementById("dateStart"),b=document.getElementById("dateEnd");
+  if(a)a.value=localStorage.getItem("gb_date_start")||"";
+  if(b)b.value=localStorage.getItem("gb_date_end")||"";
+}
+function currentFilters(){
+  return {
+    lojaId:document.getElementById("storeFilter")?.value||"todas",
+    situacao:document.getElementById("statusFilter")?.value||"andamento",
+    dataInicial:document.getElementById("dateStart")?.value||"",
+    dataFinal:document.getElementById("dateEnd")?.value||"",
+  };
+}
+
+async function loadOrders(nextBatch=false,forceRefresh=false){
+  if(loading)return;
+  loading=true;updateLoadButton();buttons(true);
+  try{
+    if(forceRefresh){nextPage=1;loadedIds=new Set();orders=[];selected.clear()}
+    const f=currentFilters();
+    const storeLabel=document.getElementById("storeFilter")?.selectedOptions?.[0]?.textContent||"Todas as lojas";
+    const statusLabel=document.getElementById("statusFilter")?.selectedOptions?.[0]?.textContent||"Andamento";
+    const mode=nextBatch?`próximos ${batchSize}`:`${batchSize} pedidos`;
+    setProgress(`Buscando ${mode}: ${storeLabel} → ${statusLabel}...`,true);
+    const exclude=[...loadedIds].map(String).filter(Boolean);
+    const q=exclude.length?`&exclude=${encodeURIComponent(exclude.join(","))}`:"";
+    const deliveryQ=`&entrega=${encodeURIComponent(document.getElementById("deliveryFilter")?.value||"todas")}`;
+    const dateQ=(f.dataInicial?`&dataInicial=${encodeURIComponent(f.dataInicial)}`:"")+(f.dataFinal?`&dataFinal=${encodeURIComponent(f.dataFinal)}`:"");
+    const j=await api(`/api/orders?limite=${batchSize}&pagina=${nextPage}&lojaId=${encodeURIComponent(f.lojaId)}&situacao=${encodeURIComponent(f.situacao)}${deliveryQ}${dateQ}${q}&fresh=1${cacheBust()}`);
+    const incoming=(j.orders||[]).filter(o=>o&&o.id!=null&&String(o.id)!=="undefined"&&Array.isArray(o.items)&&!loadedIds.has(String(o.id)));
+    incoming.forEach(o=>{loadedIds.add(String(o.id));orders.push(o)});
+    nextPage=Number(j.nextPage||nextPage+1);if(nextPage>100)nextPage=100;
+    lastOperation=`${incoming.length} novo(s) pedido(s) carregado(s) em ${new Date().toLocaleString("pt-BR")}`;
+    document.getElementById("lastUpdate").textContent=lastOperation;
+    render();updateCounters();
+    document.getElementById("msg").innerHTML=incoming.length?`<div class="notice green">${incoming.length} pedido(s) carregado(s). Total na fila: <b>${orders.length}</b>. Próxima carga: ${batchSize}.</div>`:`<div class="notice" style="background:#fff7cc;color:#92400e">Nenhum pedido carregado. Bling analisou ${j.pagesScanned||0} página(s), encontrou ${j.candidatesFound||0} candidatos. Detalhes com erro: ${j.detailErrors||0}; rejeitados por canal: ${j.rejectedChannel||0}; já processados/ocultos: ${j.skippedLocal||0}.</div>`;
+    document.getElementById("bulkMsg").textContent="";
+    setProgress(incoming.length?`${incoming.length} novos pedidos carregados. Total na tela: ${orders.length}.`:`Nenhum novo pedido encontrado para os filtros selecionados.`,false);
+  }catch(e){document.getElementById("msg").innerHTML='<div class="notice" style="background:#fff1f2;color:#be123c"><b>Erro ao atualizar:</b> '+e.message+'</div>';setProgress("Erro ao atualizar: "+e.message,false)}
+  finally{loading=false;updateLoadButton();buttons(false)}
+}
+
+async function removeSelectedFromQueue(){
+  const ids=[...selected].map(String);
+  if(!ids.length)return alert("Selecione os pedidos que deseja tirar da fila.");
+  if(!confirm(`Tirar ${ids.length} pedido(s) da fila? Eles não serão emitidos automaticamente; use somente para pedidos que você já resolveu no Bling.`))return;
+  try{
+    await api("/api/orders/hide-processed",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});
+    // Remove immediately from the screen so the user can see that they left.
+    const removed=new Set(ids);
+    orders=orders.filter(o=>!removed.has(String(o.id)));
+    selected.clear();render();
+    setProgress(`${ids.length} pedido(s) retirado(s) da fila. Carregando os próximos ${batchSize}...`,true);
+    await loadOrders(true);
+  }catch(e){alert(e.message);setProgress("Erro ao tirar pedidos da fila: "+e.message,false)}
+}
+function visibleOrders(){const q=(document.getElementById("search")?.value||"").toLowerCase();const mode=document.getElementById("deliveryFilter")?.value||"todas";return orders.filter(o=>(mode==="todas"||(mode==="direta"&&o.deliveryType==="direct")||(mode==="express"&&o.deliveryType==="express")||(mode==="normal"&&o.deliveryType==="normal"))&&(o.id+" "+o.number+" "+o.orderSn+" "+o.client+" "+o.items.map(i=>i.sku+" "+i.name).join(" ")).toLowerCase().includes(q))}
+function stockBadge(o){if(o.cancelled)return '<span class="badge cancel">Cancelado</span>';if(o.hasUnknown)return '<span class="badge waiting">Conferir estoque</span>';return o.available?'<span class="badge ready">Disponível</span>':'<span class="badge no">Sem estoque</span>'}
+function stage(o){if(o.cancelled)return '<span class="badge cancel">Cancelado</span>';if(o.available&&!o.hasUnknown)return '<span class="badge ready">Pronto para NF-e</span>';if(o.hasUnknown)return '<span class="badge waiting">Aguardando conferência</span>';return '<span class="badge no">Bloqueado por estoque</span>'}
+function render(){const a=visibleOrders();document.getElementById("body").innerHTML=a.map(o=>`<tr><td><input type="checkbox" ${selected.has(String(o.id))?"checked":""} ${o.cancelled?"disabled":""} onchange="setSelected('${o.id}',this.checked)"></td><td><b>#${o.number||o.id}</b></td><td>${o.client||"—"}</td><td>${o.items.length} (${o.items.reduce((n,i)=>n+Number(i.qty||0),0)} produtos)</td><td>${money(o.total)}</td><td><span class="badge ${o.deliveryType==='direct'?'ready':o.deliveryType==='normal'?'progress':'waiting'}" title="${o.shippingCarrier||o.deliveryLabel||''}">${o.deliveryType==='direct'?'Entrega Direta':o.deliveryType==='normal'?'Envio normal':(o.deliveryLabel||'Não identificado')}</span></td><td>${stage(o)}</td><td>${stockBadge(o)}</td><td><button class="btn light" onclick="openOrder('${o.id}')">Detalhes</button></td></tr>`).join("")||'<tr><td colspan="9" class="empty">Nenhum pedido.</td></tr>';updateCount();updateCounters()}
+function setSelected(id,on){id=String(id);if(on)selected.add(id);else selected.delete(id);updateCount();updateCounters();renderProgress()}
+function updateCount(){document.getElementById("selCount").textContent=selected.size+" selecionado(s)";const cb=document.getElementById("selectAll");if(cb){const a=visibleOrders().filter(o=>!o.cancelled);cb.checked=a.length>0&&a.every(o=>selected.has(String(o.id)));cb.indeterminate=a.some(o=>selected.has(String(o.id)))&&!cb.checked}}
+function toggleAll(on){visibleOrders().filter(o=>!o.cancelled).forEach(o=>on?selected.add(String(o.id)):selected.delete(String(o.id)));render()}
+function selectAvailable(){selected=new Set(orders.filter(o=>o&&!o.cancelled&&o.id!=null&&o.items?.length>0&&o.available===true&&o.hasUnknown!==true).map(o=>String(o.id)));lastOperation=`${selected.size} pedido(s) disponíveis marcados`;render();setProgress(`${selected.size} pedido(s) disponíveis marcados para emissão.`,false)}
+function clearSelection(){selected.clear();render();setProgress("Seleção desmarcada.",false)}
+function buttons(disabled){document.querySelectorAll("#orders .btn").forEach(b=>b.disabled=disabled)}
+async function checkAllStock(){const ids=orders.filter(o=>o&&!o.cancelled).map(o=>String(o.id));if(!ids.length)return alert("Não há pedidos para conferir.");await doStock(ids)}
+async function checkSelectedStock(){const ids=[...selected];if(!ids.length)return alert("Selecione os pedidos que deseja conferir.");await doStock(ids)}
+async function doStock(ids){buttons(true);try{setProgress(`Conferindo estoque de ${ids.length} pedido(s)...`,true);const j=await api("/api/orders/check-stock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});j.orders.forEach(x=>{const i=orders.findIndex(o=>String(o.id)===String(x.id));if(i>=0)orders[i]=x});render();document.getElementById("bulkMsg").textContent=`Conferência concluída: ${j.available} disponível(is), ${j.blocked} bloqueado(s).`;setProgress(`Conferência concluída: ${j.available} disponível(is) e ${j.blocked} bloqueado(s).`,false)}catch(e){alert(e.message);setProgress("Erro na conferência: "+e.message,false)}finally{buttons(false)}}
+async function openOrder(id){try{const o=await api("/api/orders/"+id);const idx=orders.findIndex(x=>String(x.id)===String(id));if(idx>=0)orders[idx]=o;render();document.getElementById("mtitle").textContent="Pedido #"+(o.number||o.id);document.getElementById("mcontent").innerHTML=`<p>Canal: <b>${o.channel||"Shopee"}</b> · Cliente: <b>${o.client||"—"}</b> · Total: <b>${money(o.total)}</b></p>${o.items.map(i=>`<div class="item"><div class="itemline"><div><b>${i.name}</b><br><small>SKU: ${i.sku} · Qtd: ${i.qty}</small></div><div>${i.stock<0?"<span class='bad'>Não consultado</span>":i.stock>=i.qty?"<span class='ok'>✓ Estoque "+i.stock+"</span>":"<span class='bad'>✕ Estoque "+i.stock+"</span>"}</div></div>${i.stock<i.qty&&i.alternative?`<div class="notice" style="background:#fff9e6">Alternativa cadastrada: <b>${i.alternative.name}</b> (SKU ${i.alternative.sku}) <button class="btn yellow" onclick="alternative('${o.id}','${i.id}',${i.alternative.productId})">Usar alternativa</button></div>`:""}</div>`).join("")}<div class="top" style="margin-top:18px"><button class="btn light" onclick="closeModal()">Fechar</button><button class="btn blue" ${o.available&&!o.hasUnknown&&!o.cancelled?"":"disabled"} onclick="generate('${o.id}')">Emitir NF-e</button></div>`;document.getElementById("modal").classList.add("show")}catch(e){alert(e.message)}}
+async function alternative(id,itemId,pid){if(!confirm("Trocar este item pela alternativa no pedido do Bling?"))return;try{await api("/api/orders/"+id+"/use-alternative",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({itemId,alternativeProductId:pid})});alert("Alternativa aplicada ao pedido do Bling.");closeModal();openOrder(id)}catch(e){alert(e.message)}}
+async function generate(id){if(!confirm("Confirmar emissão da NF-e deste pedido? O sistema vai conferir o estoque novamente."))return;try{setProgress("Emitindo NF-e do pedido...",true);const j=await api("/api/orders/"+id+"/generate-nfe",{method:"POST"});alert(j.message||"NF-e encaminhada.");closeModal();await loadOrders();setProgress("NF-e encaminhada com sucesso.",false)}catch(e){alert(e.message);setProgress("NF-e não emitida: "+e.message,false)}}
+function goToProgress(){if(!selected.size)return alert("Marque pelo menos um pedido em Pedidos de Vendas.");const btn=[...document.querySelectorAll(".nav button")].find(x=>x.textContent.includes("Andamento"));page("progress",btn);renderProgress();}
+async function bulkGenerate(){const ids=[...selected];if(!ids.length)return alert("Selecione os pedidos que deseja emitir.");const eligible=orders.filter(o=>ids.includes(String(o.id))&&o.available&&!o.hasUnknown&&!o.cancelled);if(!eligible.length)return alert("Nenhum dos pedidos selecionados está disponível para emissão. Primeiro confira o estoque e marque os disponíveis.");if(!confirm(`Emitir NF-e para ${eligible.length} pedido(s) disponíveis? Os pedidos sem estoque serão bloqueados.`))return;buttons(true);try{setProgress(`Emitindo NF-e de ${eligible.length} pedido(s)...`,true);const j=await api("/api/orders/bulk-generate-nfe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});selected=new Set();await loadOrders(false,true);document.getElementById("bulkMsg").textContent=`Concluído: ${j.generated} nota(s) gerada(s), ${j.blocked} bloqueado(s), ${j.errors?.length||0} erro(s).`;if(j.errors?.length)alert(j.errors.join("\n"));setProgress(`Emissão concluída: ${j.generated} NF-e processada(s).`,false)}catch(e){alert(e.message);setProgress("Erro na emissão: "+e.message,false)}finally{buttons(false)}}
+async function loadInvoices(){try{const j=await api("/api/nfe?limite=100");const a=j.data||[];document.getElementById("nfeBody").innerHTML=a.map(n=>`<tr><td>${n.id||"—"}</td><td>${n.numero||"—"}</td><td>${n.serie||"—"}</td><td>${n.contato?.nome||"—"}</td><td>${n.situacao||"—"}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Nenhuma nota.</td></tr>'}catch(e){document.getElementById("nfeBody").innerHTML='<tr><td colspan="5" class="empty">'+e.message+"</td></tr>"}}
+function renderProgress(){const picked=orders.filter(o=>selected.has(String(o.id)));const ready=picked.filter(o=>o.available&&!o.hasUnknown&&!o.cancelled).length;const no=picked.filter(o=>!o.cancelled&&o.items.some(i=>i.stock>=0&&i.stock<i.qty)).length;const unknown=picked.filter(o=>!o.cancelled&&o.hasUnknown).length;document.getElementById("progressSummary").innerHTML=`<div class="summary"><span class="pill">Marcados: <b>${picked.length}</b></span><span class="pill">Prontos para NF-e: <b>${ready}</b></span><span class="pill">Sem estoque: <b>${no}</b></span><span class="pill">Aguardando conferência: <b>${unknown}</b></span></div><div class="notice" style="background:#eef6ff;color:#1459b8">${lastOperation||"Marque os pedidos em Pedidos de Vendas para trazê-los para esta etapa."}</div>`;document.getElementById("progressBody").innerHTML=picked.map(o=>`<tr><td><b>#${o.number||o.id}</b></td><td>${o.client||"—"}</td><td>${stage(o)}</td><td>${stockBadge(o)}</td><td><span class="badge progress">Marcado</span></td></tr>`).join("")||'<tr><td colspan="5" class="empty">Nenhum pedido marcado. Volte em Pedidos de Vendas e marque os pedidos que deseja processar.</td></tr>'}
+function setProgress(text,busy){lastOperation=text;const el=document.getElementById("dashProgress");if(el)el.innerHTML=(busy?"<b>⏳ ":"<b>✓ ")+text+"</b>";renderProgress()}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+status();loadBlingConfig();loadShopeeConfig();initBatchSize();initDateFilters();loadSalesFilters().then(()=>loadOrders());if(new URLSearchParams(location.search).get("connected"))alert("Bling conectado com sucesso.");if(new URLSearchParams(location.search).get("shopee_connected"))alert("Shopee conectada com sucesso.");
+</script></body></html>
