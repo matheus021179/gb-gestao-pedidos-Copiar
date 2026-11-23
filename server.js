@@ -6,7 +6,7 @@ const path = require("path");
 const crypto = require("crypto");
 
 const app = express();
-// GB v3.0: Shopee queue + configurable batches 10-100 + persistent pagination + mass stock/NF-e + diagnostics
+// GB v3.11.3: Shopee queue + configurable batches 10-100 + persistent pagination + mass stock/NF-e + diagnostics
 app.use(express.json({limit:"2mb"}));
 app.use(express.urlencoded({extended:true}));
 app.use(express.static(path.join(__dirname,"public")));
@@ -100,11 +100,17 @@ async function classifyShopeeDelivery(rawOrders,wrappedOrders){
     for(let i=0;i<sns.length;i+=50){
       const details=await getShopeeOrderDetails(sns.slice(i,i+50));
       for(const d of details){
-        const carrier=String(d.shipping_carrier||d.package_list?.[0]?.shipping_carrier||"");
-        const direct=/entrega\s*direta|log[ií]stica\s*do\s*vendedor/i.test(carrier);
-        const express=/shopee\s*(?:xpress|express)|spx(?:\s*express)?|spex/i.test(carrier);
-        const deliveryType=direct?"direct":(express?"express":(carrier?"normal":"unknown"));
-        const deliveryLabel=direct?"Entrega Direta":(express?"Shopee Express":(carrier||"Não identificado"));
+        // A Shopee pode devolver nomes diferentes para a logística própria do vendedor.
+        // Normalizamos acentos e espaços para evitar classificar Entrega Direta como envio normal.
+        const carrier=String(d.shipping_carrier||d.package_list?.[0]?.shipping_carrier||"").trim();
+        const carrierNorm=carrier.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ");
+        const direct=/entrega\s*direta|entrega\s*(?:pelo|do)\s*vendedor|logistica\s*(?:do|propria)\s*vendedor|logistica\s*propria|seller\s*(?:own\s*)?(?:fleet|delivery)|own\s*fleet|vendedor\s*(?:entrega|envio)|retirada\s*(?:pelo|no)\s*vendedor/.test(carrierNorm);
+        const express=/shopee\s*(?:xpress|express)|spx(?:\s*express)?|spex/.test(carrierNorm);
+        // Só marcamos como envio normal quando o nome identifica uma transportadora/modalidade conhecida.
+        // Valores vazios ou desconhecidos ficam pendentes, nunca são classificados por suposição.
+        const normal=/correios|jadlog|loggi|sequoia|total\s*express|azul\s*cargo|buslog|rede\s*sul|shopee\s*standard|standard\s*delivery|envio\s*normal/.test(carrierNorm);
+        const deliveryType=direct?"direct":(express?"express":(normal?"normal":"unknown"));
+        const deliveryLabel=direct?"Entrega Direta":(express?"Shopee Express":(normal?(carrier||"Envio normal"):(carrier||"Modalidade não identificada")));
         bySn.set(String(d.order_sn),{deliveryType,shippingCarrier:carrier,deliveryLabel});
       }
     }
@@ -600,7 +606,7 @@ app.get("/api/orders",async(req,res)=>{
       skippedLocal,
       nextPage: pagesScanned ? Math.min(100,startPage + pagesScanned) : null,
       nextBatchSupported:true,
-      serverVersion:"3.10.0"
+      serverVersion:"3.11.3"
     });
   }catch(e){safeJson(res,500,{error:e.message})}
 });
@@ -696,7 +702,9 @@ app.post("/api/orders/check-stock",async(req,res)=>{
         const o=await detailWithStock(id);
         out.push(wrapOrder(db)(o));
       }catch(e){
-        out.push({id:Number(id)||id,number:id,client:"",items:[],total:0,available:false,hasUnknown:true,error:e.message});
+        // Keep the original order data on the client. A failed Bling request
+        // must never replace a real order with an empty/incomplete object.
+        out.push({id:Number(id)||id,__checkError:true,error:e.message});
       }
     }
     const available=out.filter(o=>o.available&&!o.hasUnknown).length;
@@ -1007,7 +1015,7 @@ app.get("/api/diagnostico-pedidos",async(req,res)=>{
     res.json({ok:true,shopeeChannelIds:[...shopeeIds],total:data.length,pedidos:data});
   }catch(e){safeJson(res,500,{error:e.message})}
 });
-app.get("/api/health",(req,res)=>res.json({ok:true,time:new Date().toISOString(),version:"3.11.0"}));
+app.get("/api/health",(req,res)=>res.json({ok:true,time:new Date().toISOString(),version:"3.11.2"}));
 app.get("/",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html"))); app.listen(PORT,()=>console.log("GB Gestao de Pedidos: http://localhost:"+PORT));
 
 
