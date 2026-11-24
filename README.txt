@@ -49,3 +49,6 @@ SEGURANCA
 ALTERACAO 3.11.1
 A função de gravação agora cria o diretório DATA_DIR automaticamente antes de salvar store.json.
 Isso evita erro quando o diretório ainda não existe; não substitui o Persistent Disk.
+
+
+Correção 3.11.3: classificação de Entrega Direta com variações de nome da logística do vendedor; modalidades desconhecidas não são mais presumidas como envio normal.

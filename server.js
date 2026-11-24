@@ -6,7 +6,7 @@ const path = require("path");
 const crypto = require("crypto");
 
 const app = express();
-// GB v3.11.3: Shopee queue + configurable batches 10-100 + persistent pagination + mass stock/NF-e + diagnostics
+// GB v3.0: Shopee queue + configurable batches 10-100 + persistent pagination + mass stock/NF-e + diagnostics
 app.use(express.json({limit:"2mb"}));
 app.use(express.urlencoded({extended:true}));
 app.use(express.static(path.join(__dirname,"public")));
