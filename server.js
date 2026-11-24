@@ -104,7 +104,7 @@ async function classifyShopeeDelivery(rawOrders,wrappedOrders){
         // Normalizamos acentos e espaços para evitar classificar Entrega Direta como envio normal.
         const carrier=String(d.shipping_carrier||d.package_list?.[0]?.shipping_carrier||"").trim();
         const carrierNorm=carrier.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ");
-        const direct=/entrega\s*direta|entrega\s*(?:pelo|do)\s*vendedor|logistica\s*(?:do|propria)\s*vendedor|logistica\s*propria|seller\s*(?:own\s*)?(?:fleet|delivery)|own\s*fleet|vendedor\s*(?:entrega|envio)|retirada\s*(?:pelo|no)\s*vendedor/.test(carrierNorm);
+        const direct=/entrega\s*direta|entrega\s*rapida|entrega\s*(?:pelo|do)\s*vendedor|logistica\s*(?:do|propria)\s*vendedor|logistica\s*propria|seller\s*(?:own\s*)?(?:fleet|delivery)|own\s*fleet|vendedor\s*(?:entrega|envio)|retirada\s*(?:pelo|no)\s*vendedor/.test(carrierNorm);
         const express=/shopee\s*(?:xpress|express)|spx(?:\s*express)?|spex/.test(carrierNorm);
         // Só marcamos como envio normal quando o nome identifica uma transportadora/modalidade conhecida.
         // Valores vazios ou desconhecidos ficam pendentes, nunca são classificados por suposição.

@@ -52,3 +52,13 @@ Isso evita erro quando o diretório ainda não existe; não substitui o Persiste
 
 
 Correção 3.11.3: classificação de Entrega Direta com variações de nome da logística do vendedor; modalidades desconhecidas não são mais presumidas como envio normal.
+
+
+VERSAO 3.11.5 — AJUSTE DE ENTREGA DIRETA E ATALHO
+- A classificacao da Shopee agora reconhece tambem o texto "Entrega Rapida" como Entrega Direta, para corresponder ao rótulo observado na fila da loja. Validar com pedidos reais antes de faturar.
+- Incluido ATALHO_GB_GESTAO_DE_PEDIDOS.url para criar acesso direto na area de trabalho do Windows.
+
+PERSISTENCIA NO RENDER
+- Este pacote NAO consegue garantir persistencia de tokens/configuracoes no Render Free: o armazenamento local pode ser descartado em reinicios/deploys.
+- Para persistencia confiavel, configure armazenamento persistente suportado pelo servico (por exemplo, disco persistente com DATA_DIR=/var/data) ou migre os dados para um banco persistente. Isso pode exigir plano/servico com custo; nao foi habilitado nem contratado por este pacote.
+- Nao apague nem substitua o servico Central JB Auto Pecas.

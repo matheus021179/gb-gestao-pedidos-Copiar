@@ -1,6 +1,6 @@
 {
   "name": "gb-gestao-pedidos",
-  "version": "3.11.3",
+  "version": "3.11.5",
   "private": true,
   "description": "GB Gestão de Pedidos — Shopee x Bling — emissão NF-e e envio à SEFAZ",
   "main": "server.js",
